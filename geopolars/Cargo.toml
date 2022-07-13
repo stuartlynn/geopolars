@@ -9,4 +9,8 @@ edition = "2021"
 geozero = { version = "0.9.4", features = ["with-wkb"] }
 rstar = "0.9.3"
 geo = { git = "https://github.com/georust/geo.git", rev = '578e213875915e1f895892487b5a36ca0d91fac3' }
-polars = { version = "0.22.8", features = ["ipc", "dtype-u8", "dtype-i8"] }
+polars = { git = "https://github.com/stuartlynn/polars.git", branch = 'wasm_rebase', default-features = false, features = ["ipc", "dtype-u8", "dtype-i8"] }
+getrandom = { version = "0.2", features = ['js'] }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
