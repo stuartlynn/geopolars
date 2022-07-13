@@ -1,14 +1,12 @@
-use std::sync::Arc;
-
 use crate::util::iter_geom;
 use geo::algorithm::affine_ops::AffineTransform;
 use geo::{map_coords::MapCoords, Geometry, Point};
 use geozero::{CoordDimensions, ToWkb};
 use polars::export::arrow::array::{
-    ArrayRef, BinaryArray, BooleanArray, MutableBinaryArray, MutableBooleanArray,
-    MutablePrimitiveArray, PrimitiveArray,
+    BinaryArray, BooleanArray, MutableBinaryArray, MutableBooleanArray, MutablePrimitiveArray,
+    PrimitiveArray,
 };
-use polars::prelude::{PolarsError, Result, Series};
+use polars::prelude::{ArrayRef, PolarsError, Result, Series};
 use std::convert::Into;
 
 pub enum GeodesicLengthMethod {
@@ -215,7 +213,7 @@ impl GeoSeries for Series {
 
         let result: BinaryArray<i32> = output_array.into();
 
-        Series::try_from(("geometry", Arc::new(result) as ArrayRef))
+        Series::try_from(("geometry", Box::new(result) as ArrayRef))
     }
 
     fn convex_hull(&self) -> Result<Series> {
@@ -240,7 +238,7 @@ impl GeoSeries for Series {
         }
 
         let result: BinaryArray<i32> = output_array.into();
-        Series::try_from(("geometry", Arc::new(result) as ArrayRef))
+        Series::try_from(("geometry", Box::new(result) as ArrayRef))
     }
 
     fn envelope(&self) -> Result<Series> {
@@ -259,7 +257,7 @@ impl GeoSeries for Series {
 
         let result: BinaryArray<i32> = output_array.into();
 
-        Series::try_from(("geometry", Arc::new(result) as ArrayRef))
+        Series::try_from(("geometry", Box::new(result) as ArrayRef))
     }
 
     fn euclidean_length(&self) -> Result<Series> {
@@ -294,7 +292,7 @@ impl GeoSeries for Series {
         }
 
         let result: PrimitiveArray<f64> = result.into();
-        Series::try_from(("result", Arc::new(result) as ArrayRef))
+        Series::try_from(("result", Box::new(result) as ArrayRef))
     }
 
     fn exterior(&self) -> Result<Series> {
@@ -313,7 +311,7 @@ impl GeoSeries for Series {
 
         let result: BinaryArray<i32> = output_array.into();
 
-        Series::try_from(("geometry", Arc::new(result) as ArrayRef))
+        Series::try_from(("geometry", Box::new(result) as ArrayRef))
     }
 
     fn from_geom_vec(geoms: &[Geometry<f64>]) -> Result<Self> {
@@ -329,7 +327,7 @@ impl GeoSeries for Series {
         }
         let array: BinaryArray<i32> = wkb_array.into();
 
-        let series = Series::try_from(("geometry", Arc::new(array) as ArrayRef)).unwrap();
+        let series = Series::try_from(("geometry", Box::new(array) as ArrayRef)).unwrap();
         Ok(series)
     }
 
@@ -447,7 +445,7 @@ impl GeoSeries for Series {
         }
 
         let result: PrimitiveArray<f64> = result.into();
-        Series::try_from(("result", Arc::new(result) as ArrayRef))
+        Series::try_from(("result", Box::new(result) as ArrayRef))
     }
 
     fn geom_type(&self) -> Result<Series> {
@@ -471,7 +469,7 @@ impl GeoSeries for Series {
         }
 
         let result: PrimitiveArray<i8> = result.into();
-        Series::try_from(("result", Arc::new(result) as ArrayRef))
+        Series::try_from(("result", Box::new(result) as ArrayRef))
     }
 
     fn is_empty(&self) -> Result<Series> {
@@ -484,7 +482,7 @@ impl GeoSeries for Series {
         }
 
         let result: BooleanArray = result.into();
-        Series::try_from(("result", Arc::new(result) as ArrayRef))
+        Series::try_from(("result", Box::new(result) as ArrayRef))
     }
 
     fn is_ring(&self) -> Result<Series> {
@@ -500,7 +498,7 @@ impl GeoSeries for Series {
         }
 
         let result: BooleanArray = result.into();
-        Series::try_from(("result", Arc::new(result) as ArrayRef))
+        Series::try_from(("result", Box::new(result) as ArrayRef))
     }
 
     fn rotate(&self, angle: f64, origin: TransformOrigin) -> Result<Series> {
@@ -590,7 +588,7 @@ impl GeoSeries for Series {
 
         let result: BinaryArray<i32> = output_array.into();
 
-        Series::try_from(("geometry", Arc::new(result) as ArrayRef))
+        Series::try_from(("geometry", Box::new(result) as ArrayRef))
     }
 
     fn skew(&self, xs: f64, ys: f64, origin: TransformOrigin) -> Result<Series> {
@@ -645,7 +643,7 @@ impl GeoSeries for Series {
         }
 
         let result: PrimitiveArray<f64> = result.into();
-        Series::try_from(("result", Arc::new(result) as ArrayRef))
+        Series::try_from(("result", Box::new(result) as ArrayRef))
     }
 
     fn y(&self) -> Result<Series> {
@@ -664,7 +662,7 @@ impl GeoSeries for Series {
         }
 
         let result: PrimitiveArray<f64> = result.into();
-        Series::try_from(("result", Arc::new(result) as ArrayRef))
+        Series::try_from(("result", Box::new(result) as ArrayRef))
     }
 }
 
@@ -679,7 +677,8 @@ mod tests {
 
     use geo::{line_string, polygon, CoordsIter, Geometry, LineString, MultiPoint, Point};
     use geozero::{CoordDimensions, ToWkb};
-    use polars::export::arrow::array::{ArrayRef, BinaryArray, MutableBinaryArray};
+    use polars::export::arrow::array::{BinaryArray, MutableBinaryArray};
+    use polars::prelude::ArrayRef;
 
     use super::TransformOrigin;
 
@@ -716,7 +715,7 @@ mod tests {
 
         let test_array: BinaryArray<i32> = test_data.into();
 
-        let series = Series::try_from(("geometry", Arc::new(test_array) as ArrayRef)).unwrap();
+        let series = Series::try_from(("geometry", Box::new(test_array) as ArrayRef)).unwrap();
         let convex_res = series.convex_hull();
 
         assert!(
@@ -895,7 +894,7 @@ mod tests {
 
         let test_array: BinaryArray<i32> = test_data.into();
 
-        let series = Series::try_from(("geometry", Arc::new(test_array) as ArrayRef)).unwrap();
+        let series = Series::try_from(("geometry", Box::new(test_array) as ArrayRef)).unwrap();
         let lengths = series.euclidean_length().unwrap();
         let as_vec: Vec<f64> = lengths.f64().unwrap().into_no_null_iter().collect();
 
@@ -918,7 +917,7 @@ mod tests {
 
         let test_array: BinaryArray<i32> = test_data.into();
 
-        let series = Series::try_from(("geometry", Arc::new(test_array) as ArrayRef)).unwrap();
+        let series = Series::try_from(("geometry", Box::new(test_array) as ArrayRef)).unwrap();
         let lengths = series
             .geodesic_length(GeodesicLengthMethod::Haversine)
             .unwrap();
@@ -946,7 +945,7 @@ mod tests {
 
         let test_array: BinaryArray<i32> = test_data.into();
 
-        let series = Series::try_from(("geometry", Arc::new(test_array) as ArrayRef)).unwrap();
+        let series = Series::try_from(("geometry", Box::new(test_array) as ArrayRef)).unwrap();
         let lengths = series
             .geodesic_length(GeodesicLengthMethod::Vincenty)
             .unwrap();
@@ -977,7 +976,7 @@ mod tests {
 
         let test_array: BinaryArray<i32> = test_data.into();
 
-        let series = Series::try_from(("geometry", Arc::new(test_array) as ArrayRef)).unwrap();
+        let series = Series::try_from(("geometry", Box::new(test_array) as ArrayRef)).unwrap();
         let lengths = series
             .geodesic_length(GeodesicLengthMethod::Geodesic)
             .unwrap();
